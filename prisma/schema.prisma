@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(ADMIN)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artists Artist[]
+  posts   Post[]
+  inquiries Inquiry[]
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  MARKETING
+  CONTENT_EDITOR
+  OPERATOR
+}
+
+model Artist {
+  id          String   @id @default(cuid())
+  name        String
+  stageName   String?
+  slug        String   @unique
+  genre       String
+  bio         String
+  imageUrl    String?
+  status      ArtistStatus @default(ACTIVE)
+  featured    Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id])
+
+  releases    Release[]
+  events      Event[]
+}
+
+enum ArtistStatus {
+  ACTIVE
+  FEATURED
+  INACTIVE
+  ARCHIVED
+}
+
+model Release {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  type        ReleaseType
+  description String
+  releaseDate DateTime
+  coverUrl    String?
+  artistId    String
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ReleaseType {
+  SINGLE
+  EP
+  ALBUM
+  MIXTAPE
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  venue       String
+  date        DateTime
+  description String
+  ticketLink  String?
+  artistId    String?
+  artist      Artist?  @relation(fields: [artistId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  category    String
+  excerpt     String
+  content     String
+  coverUrl    String?
+  published   Boolean  @default(false)
+  authorId    String?
+  author      User?    @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+enum InquiryStatus {
+  NEW
+  REVIEWED
+  CONTACTED
+  CLOSED
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?
+  createdAt DateTime @default(now())
+}
